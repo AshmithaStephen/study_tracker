@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Study Tracker</title>
+</head>
+<body>
+    <h1>📚 Study Tracker</h1>
+    
+    <input type="text" id="task" placeholder="Enter study task">
+    <button onclick="addTask()">Add</button>
+
+    <ul id="list"></ul>
+
+    <script>
+        function addTask() {
+            let task = document.getElementById("task").value;
+            let li = document.createElement("li");
+            li.textContent = task;
+            document.getElementById("list").appendChild(li);
+        }
+    </script>
+</body>
+</html>
