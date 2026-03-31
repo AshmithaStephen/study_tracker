@@ -1,23 +1,164 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Study Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            width: 350px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input {
+            width: 70%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: #f4f4f4;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+
+        .actions button {
+            margin-left: 5px;
+            background: #ff6b6b;
+        }
+
+        .actions button.complete {
+            background: #28a745;
+        }
+
+        .stats {
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
+
+<div class="container">
     <h1>📚 Study Tracker</h1>
-    
-    <input type="text" id="task" placeholder="Enter study task">
+
+    <input type="text" id="taskInput" placeholder="Enter task">
     <button onclick="addTask()">Add</button>
 
-    <ul id="list"></ul>
+    <ul id="taskList"></ul>
 
-    <script>
-        function addTask() {
-            let task = document.getElementById("task").value;
+    <div class="stats">
+        <p>Total: <span id="total">0</span></p>
+        <p>Completed: <span id="completed">0</span></p>
+    </div>
+</div>
+
+<script>
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    function saveTasks() {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+        let list = document.getElementById("taskList");
+        list.innerHTML = "";
+
+        let completedCount = 0;
+
+        tasks.forEach((task, index) => {
             let li = document.createElement("li");
-            li.textContent = task;
-            document.getElementById("list").appendChild(li);
-        }
-    </script>
+
+            if (task.done) {
+                li.classList.add("completed");
+                completedCount++;
+            }
+
+            li.innerHTML = `
+                ${task.text}
+                <div class="actions">
+                    <button class="complete" onclick="toggleTask(${index})">✔</button>
+                    <button onclick="deleteTask(${index})">✖</button>
+                </div>
+            `;
+
+            list.appendChild(li);
+        });
+
+        document.getElementById("total").textContent = tasks.length;
+        document.getElementById("completed").textContent = completedCount;
+
+        saveTasks();
+    }
+
+    function addTask() {
+        let input = document.getElementById("taskInput");
+        let text = input.value.trim();
+
+        if (text === "") return;
+
+        tasks.push({ text: text, done: false });
+        input.value = "";
+
+        renderTasks();
+    }
+
+    function deleteTask(index) {
+        tasks.splice(index, 1);
+        renderTasks();
+    }
+
+    function toggleTask(index) {
+        tasks[index].done = !tasks[index].done;
+        renderTasks();
+    }
+
+    renderTasks();
+</script>
+
 </body>
 </html>
