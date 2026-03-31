@@ -2,90 +2,107 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AI Study Dashboard</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Futuristic Study Dashboard</title>
 
 <style>
 body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
-    background: radial-gradient(circle, #0f2027, #203a43, #2c5364);
+    background: radial-gradient(circle at top, #0f2027, #203a43, #2c5364);
     color: white;
 }
 
 .container {
     width: 90%;
-    max-width: 1000px;
-    margin: 20px auto;
+    max-width: 900px;
+    margin: 30px auto;
 }
 
 h1 {
     text-align: center;
+    margin-bottom: 20px;
 }
 
-/* Dashboard */
+/* Dashboard Cards */
 .dashboard {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
+    margin-bottom: 20px;
 }
 
 .card {
-    background: rgba(255,255,255,0.1);
     padding: 20px;
     border-radius: 15px;
-    text-align: center;
+    background: rgba(255,255,255,0.1);
     backdrop-filter: blur(10px);
+    text-align: center;
+    box-shadow: 0 0 15px rgba(0,255,255,0.3);
+}
+
+.card h2 {
+    margin: 0;
+    font-size: 28px;
 }
 
 /* Input */
 .input-box {
-    margin-top: 20px;
     display: flex;
     gap: 10px;
 }
 
-input, select {
-    padding: 10px;
+input {
+    flex: 1;
+    padding: 12px;
     border-radius: 10px;
     border: none;
 }
 
 button {
-    padding: 10px;
-    border-radius: 10px;
+    padding: 12px;
     border: none;
+    border-radius: 10px;
     background: cyan;
+    cursor: pointer;
 }
 
-/* Tasks */
+/* Task List */
 ul {
     list-style: none;
     padding: 0;
+    margin-top: 20px;
 }
 
 li {
     background: rgba(255,255,255,0.1);
     margin: 10px 0;
-    padding: 10px;
+    padding: 12px;
     border-radius: 10px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
-/* Timer */
-.timer {
-    text-align: center;
-    margin-top: 20px;
+.completed {
+    text-decoration: line-through;
+    opacity: 0.6;
 }
 
-/* Progress */
+.actions button {
+    margin-left: 5px;
+    background: red;
+}
+
+.actions .done {
+    background: limegreen;
+}
+
+/* Progress Bar */
 .progress-bar {
+    margin-top: 20px;
     background: rgba(255,255,255,0.1);
-    height: 10px;
     border-radius: 10px;
-    margin-top: 10px;
+    overflow: hidden;
 }
 
 .progress {
@@ -99,163 +116,101 @@ li {
 <body>
 
 <div class="container">
+    <h1>🚀 Study Dashboard</h1>
 
-<h1>🚀 AI Study Dashboard</h1>
+    <div class="dashboard">
+        <div class="card">
+            <p>Total Tasks</p>
+            <h2 id="total">0</h2>
+        </div>
+        <div class="card">
+            <p>Completed</p>
+            <h2 id="completed">0</h2>
+        </div>
+        <div class="card">
+            <p>Pending</p>
+            <h2 id="pending">0</h2>
+        </div>
+    </div>
 
-<div class="dashboard">
-    <div class="card">Total <h2 id="total">0</h2></div>
-    <div class="card">Completed <h2 id="completed">0</h2></div>
-    <div class="card">Pending <h2 id="pending">0</h2></div>
-</div>
+    <div class="input-box">
+        <input type="text" id="taskInput" placeholder="Enter task...">
+        <button onclick="addTask()">Add</button>
+    </div>
 
-<div class="input-box">
-    <input id="taskInput" placeholder="Task">
-    <select id="subject">
-        <option>Math</option>
-        <option>Physics</option>
-        <option>Coding</option>
-    </select>
-    <button onclick="addTask()">Add</button>
-</div>
+    <ul id="taskList"></ul>
 
-<ul id="taskList"></ul>
-
-<div class="progress-bar">
-    <div class="progress" id="progress"></div>
-</div>
-
-<!-- Chart -->
-<canvas id="chart"></canvas>
-
-<!-- Timer -->
-<div class="timer">
-    <h2 id="time">25:00</h2>
-    <button onclick="startTimer()">Start</button>
-    <button onclick="resetTimer()">Reset</button>
-</div>
-
-<!-- AI Suggestion -->
-<div class="card" id="aiBox">
-    🤖 Suggestion: Start studying!
-</div>
-
+    <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
 </div>
 
 <script>
 let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-let timer;
-let timeLeft = 1500;
 
-/* TASK FUNCTIONS */
+function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function renderTasks() {
+    let list = document.getElementById("taskList");
+    list.innerHTML = "";
+
+    let completed = 0;
+
+    tasks.forEach((task, index) => {
+        let li = document.createElement("li");
+
+        if (task.done) {
+            li.classList.add("completed");
+            completed++;
+        }
+
+        li.innerHTML = `
+            ${task.text}
+            <div class="actions">
+                <button class="done" onclick="toggleTask(${index})">✔</button>
+                <button onclick="deleteTask(${index})">✖</button>
+            </div>
+        `;
+
+        list.appendChild(li);
+    });
+
+    let total = tasks.length;
+    let pending = total - completed;
+
+    document.getElementById("total").textContent = total;
+    document.getElementById("completed").textContent = completed;
+    document.getElementById("pending").textContent = pending;
+
+    let progress = total ? (completed / total) * 100 : 0;
+    document.getElementById("progress").style.width = progress + "%";
+
+    saveTasks();
+}
+
 function addTask() {
-    let text = taskInput.value;
-    let subject = document.getElementById("subject").value;
-
+    let input = document.getElementById("taskInput");
+    let text = input.value.trim();
     if (!text) return;
 
-    tasks.push({ text, subject, done:false });
-    taskInput.value="";
-    render();
+    tasks.push({ text, done: false });
+    input.value = "";
+    renderTasks();
 }
 
-function toggle(i){
-    tasks[i].done=!tasks[i].done;
-    render();
+function deleteTask(index) {
+    tasks.splice(index, 1);
+    renderTasks();
 }
 
-function del(i){
-    tasks.splice(i,1);
-    render();
+function toggleTask(index) {
+    tasks[index].done = !tasks[index].done;
+    renderTasks();
 }
 
-function render(){
-    let list=document.getElementById("taskList");
-    list.innerHTML="";
-    let completed=0;
-    let subjectCount={};
-
-    tasks.forEach((t,i)=>{
-        if(t.done) completed++;
-
-        subjectCount[t.subject]=(subjectCount[t.subject]||0)+1;
-
-        list.innerHTML+=`
-        <li>
-        ${t.text} (${t.subject})
-        <div>
-        <button onclick="toggle(${i})">✔</button>
-        <button onclick="del(${i})">✖</button>
-        </div>
-        </li>`;
-    });
-
-    total.textContent=tasks.length;
-    completedEl=document.getElementById("completed");
-    completedEl.textContent=completed;
-    pending.textContent=tasks.length-completed;
-
-    let progressVal = tasks.length ? (completed/tasks.length)*100:0;
-    progress.style.width=progressVal+"%";
-
-    localStorage.setItem("tasks",JSON.stringify(tasks));
-
-    updateChart(subjectCount);
-    aiSuggestion(completed);
-}
-
-/* CHART */
-let chart;
-function updateChart(data){
-    let ctx=document.getElementById("chart");
-
-    if(chart) chart.destroy();
-
-    chart=new Chart(ctx,{
-        type:"pie",
-        data:{
-            labels:Object.keys(data),
-            datasets:[{data:Object.values(data)}]
-        }
-    });
-}
-
-/* TIMER */
-function startTimer(){
-    clearInterval(timer);
-    timer=setInterval(()=>{
-        if(timeLeft<=0){
-            clearInterval(timer);
-            alert("Break time!");
-        }
-        timeLeft--;
-        updateTime();
-    },1000);
-}
-
-function resetTimer(){
-    timeLeft=1500;
-    updateTime();
-}
-
-function updateTime(){
-    let m=Math.floor(timeLeft/60);
-    let s=timeLeft%60;
-    document.getElementById("time").textContent=
-        `${m}:${s<10?"0":""}${s}`;
-}
-
-/* AI Suggestion */
-function aiSuggestion(done){
-    let msg="Stay consistent!";
-    if(done===0) msg="Start with an easy task!";
-    else if(done>3) msg="Great progress, keep going!";
-    else if(done>5) msg="You're on fire 🔥";
-
-    document.getElementById("aiBox").textContent="🤖 "+msg;
-}
-
-render();
-updateTime();
+renderTasks();
 </script>
 
 </body>
